@@ -1,0 +1,6 @@
+Yet Another Live Previewer
+
+Inspired by vim-instant-markdown, I wanted similar live previews for
+reStructuredText as it is the de facto documentation standard for Python
+projects. Also, being largely a python programmer, I wanted to do less
+mucking around with npm. So YALP.
