@@ -1,14 +1,16 @@
 """Sends vim buffer to socketio server"""
 
 import os
+import sys
 from multiprocessing import Process
 
 import neovim
 import requests
-import sio
 from docutils.core import publish_string
 
 HERE = os.path.dirname(os.path.abspath(os.path.expanduser(__file__)))
+sys.path.insert(0, HERE)
+import sio
 
 @neovim.plugin
 class TestPlugin(object):
