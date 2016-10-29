@@ -13,4 +13,8 @@
     document.write(timer);
     document.close()
   });
+  socket.on('quit', function(msg) {
+    window.open('', '_self', '');
+    window.close();
+  });
 </script>

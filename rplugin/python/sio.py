@@ -25,6 +25,13 @@ def runserver():
         sio.emit('timer', html)
         return 'OK'
 
+
+    @app.route('/quit', methods=["PUT"])
+    def quit():
+        """Render the html received from vim"""
+        sio.emit('quit', 'quit')
+        return 'OK'
+
     # wrap Flask application with engineio's middleware
     app = socketio.Middleware(sio, app)
 

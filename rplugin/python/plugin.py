@@ -24,8 +24,9 @@ class TestPlugin(object):
         self.makefile = os.path.join(self.makefile_dir, 'Makefile')
         self.has_makefile = os.path.isfile(self.makefile)
 
-        proc = Process(target=sio.runserver)
-        proc.start()
+        self.proc = Process(target=sio.runserver)
+        self.proc.start()
+        check_output(['open', '-g', 'http://localhost:8000'])
 
     @neovim.autocmd('CursorMoved,CursorMovedI',
                     pattern='*.rst',
@@ -57,6 +58,15 @@ class TestPlugin(object):
                     requests.put("http://localhost:8000/render", err)
                 except:
                     print err
+
+    @neovim.autocmd('VimLeavePre', pattern='*.rst')
+    def quit_webserver(self):
+        try:
+            requests.put("http://localhost:8000/quit")
+            self.proc.terminate()
+        except:
+            pass
+
 
     def parse_makefile(self):
         """Retrieve options from sphinx makefile"""
