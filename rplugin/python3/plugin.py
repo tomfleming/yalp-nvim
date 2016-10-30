@@ -20,6 +20,10 @@ class TestPlugin(object):
 
     def __init__(self, nvim):
         self.nvim = nvim
+
+    @neovim.autocmd('BufReadPost',
+                    pattern='*.rst',
+                    eval='expand("<afile>")')
         self.makefile_dir = os.path.expanduser(self.nvim.command_output('pwd'))
         self.makefile = os.path.join(self.makefile_dir, 'Makefile')
         self.has_makefile = os.path.isfile(self.makefile)
