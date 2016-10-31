@@ -20,17 +20,27 @@ class TestPlugin(object):
 
     def __init__(self, nvim):
         self.nvim = nvim
+        self.server_started = False
+        self.html = ''
 
-    @neovim.autocmd('BufReadPost',
+    @neovim.autocmd('BufEnter',
                     pattern='*.rst',
                     eval='expand("<afile>")')
-        self.makefile_dir = os.path.expanduser(self.nvim.command_output('pwd'))
-        self.makefile = os.path.join(self.makefile_dir, 'Makefile')
-        self.has_makefile = os.path.isfile(self.makefile)
+    def start_server(self, afile):
+        if not self.server_started:
+            self.server_started = True
+            try:
+                self.makefile_dir = os.path.expanduser(
+                    self.nvim.command_output('pwd'))
+                self.makefile = os.path.join(self.makefile_dir, 'Makefile')
+                self.has_makefile = os.path.isfile(self.makefile)
 
-        self.proc = Process(target=sio.runserver)
-        self.proc.start()
-        check_output(['open', '-g', 'http://localhost:8000'])
+                self.proc = Process(target=sio.runserver)
+                self.proc.start()
+                check_output(['open', '-g', 'http://localhost:8000'])
+            except Exception as e:
+                with open("/Users/tomdfleming/anotherthing.txt", "w") as f:
+                    f.write(str(e))
 
     @neovim.autocmd('CursorMoved,CursorMovedI',
                     pattern='*.rst',
@@ -38,14 +48,17 @@ class TestPlugin(object):
     def on_edit(self, filename):
         """Send buffer contents to socketio server via PUT request"""
         buf = self.nvim.current.buffer
-        html = publish_string("\n".join(buf[:]),
-                              writer_name='html',
-                              settings_overrides={'report_level':'quiet'})
         try:
-            requests.put("http://localhost:8000/render", html)
-        except Exception, err:
-            print filename
-            print err
+            self.html = publish_string(u"\n".join(buf[:]),
+                                  writer_name='html',
+                                  settings_overrides={'report_level': 'quiet'})
+        except:
+            pass
+        try:
+            requests.put("http://localhost:8000/render", self.html)
+        except Exception as err:
+            print(filename)
+            print(err)
 
     @neovim.autocmd('BufWritePost',
                     pattern='*.rst',
@@ -56,21 +69,23 @@ class TestPlugin(object):
             try:
                 check_output(['make', 'html'], cwd=self.makefile_dir)
                 requests.put("http://localhost:8000/render", filename)
-            except Exception, err:
-                print filename
+            except Exception as err:
+                print(filename)
                 try:
                     requests.put("http://localhost:8000/render", err)
                 except:
-                    print err
+                    print(err)
 
     @neovim.autocmd('VimLeavePre', pattern='*.rst')
     def quit_webserver(self):
         try:
             requests.put("http://localhost:8000/quit")
             self.proc.terminate()
-        except:
-            pass
-
+            with open("/Users/tomdfleming/anotherthing.txt", "w") as f:
+                f.write("well, it got here. so why isn't it quitting?")
+        except Exception as e:
+            with open("/Users/tomdfleming/anotherthing.txt", "w") as f:
+                f.write(str(e))
 
     def parse_makefile(self):
         """Retrieve options from sphinx makefile"""

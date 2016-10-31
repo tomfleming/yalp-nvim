@@ -1,16 +1,11 @@
 <script src="{{url_for('static', filename='socket.io.js')}}"></script>
 <script>
   var socket = io();
-  socket.on('reply', function(reply) {
+  socket.on('render', function(html) {
+    console.log(html);
     document.open();
-    document.write(reply);
+    document.write(html);
     document.write('<link rel="stylesheet" type="text/css" href="'+ "{{url_for('static', filename='github.css')}}" + '" />');
-    document.close()
-  });
-  socket.on('timer', function(timer) {
-    console.log('receiving');
-    document.open();
-    document.write(timer);
     document.close()
   });
   socket.on('quit', function(msg) {

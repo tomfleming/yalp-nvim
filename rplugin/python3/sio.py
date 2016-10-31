@@ -7,8 +7,6 @@ from flask import Flask, render_template, request
 
 
 def runserver():
-    """Run little flask+socketio instance to serve previews"""
-
     sio = socketio.Server(async_mode='eventlet')
     app = Flask(__name__)
 
@@ -17,14 +15,13 @@ def runserver():
         """Serve the client-side application."""
         return render_template('index.html')
 
-
     @app.route('/render', methods=["PUT"])
     def render():
         """Render the html received from vim"""
-        html = request.get_data()
-        sio.emit('timer', html)
+        html = request.get_data().decode('utf-8')
+        print(html)
+        sio.emit('render', html)
         return 'OK'
-
 
     @app.route('/quit', methods=["PUT"])
     def quit():
@@ -32,6 +29,7 @@ def runserver():
         sio.emit('quit', 'quit')
         return 'OK'
 
+    """Run little flask+socketio instance to serve previews"""
     # wrap Flask application with engineio's middleware
     app = socketio.Middleware(sio, app)
 
