@@ -1,13 +1,20 @@
 """Receives vim buffer and sends to socketio-client for preview"""
 
+import os
+import sys
+
 import socketio
 import eventlet
 import eventlet.wsgi
 from flask import Flask, render_template, request
 
+# Try redirecting stdout to avoid conflicts with msgpack...
+# See: https://github.com/neovim/neovim/issues/2283
+sys.stdout = open(os.devnull)
+
 
 def runserver():
-    sio = socketio.Server(async_mode='eventlet')
+    sio = socketio.Server(async_mode='threading')
     app = Flask(__name__)
 
     @app.route('/')
@@ -19,7 +26,6 @@ def runserver():
     def render():
         """Render the html received from vim"""
         html = request.get_data().decode('utf-8')
-        print(html)
         sio.emit('render', html)
         return 'OK'
 
@@ -31,7 +37,12 @@ def runserver():
 
     """Run little flask+socketio instance to serve previews"""
     # wrap Flask application with engineio's middleware
-    app = socketio.Middleware(sio, app)
+    app.wsgi_app = socketio.Middleware(sio, app.wsgi_app)
 
     # deploy as an eventlet WSGI server
-    eventlet.wsgi.server(eventlet.listen(('', 8000)), app)
+    # eventlet.wsgi.server(eventlet.listen(('', 8123)), app)
+    app.run(port=8123, threaded=True)
+
+
+if __name__ == "__main__":
+    runserver()
